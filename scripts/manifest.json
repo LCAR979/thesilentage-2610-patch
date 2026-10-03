@@ -1,0 +1,30 @@
+[
+  {
+    "path": "resources.assets",
+    "patch": "resources.assets.delta.gz",
+    "source": "8f03bf2860450230085d61df29be26eb3ce808a89607bff14ff5d8753bfc5bf0",
+    "target": "cec2da353e0df951be98b8a9f7486c06c6b3f3bece857d83ac609e3787cecc5e",
+    "size": 40970360
+  },
+  {
+    "path": "globalgamemanagers",
+    "patch": "globalgamemanagers.delta.gz",
+    "source": "5bebbe2a35def0e71391f030661dcda58f67659e882f2b2e1c853f031a1f8cdd",
+    "target": "ca3b253d4a1af974b952d80782ab65450d97e9fd60c909601ad4bfcfba698a81",
+    "size": 158032
+  },
+  {
+    "path": "level3",
+    "patch": "level3.delta.gz",
+    "source": "c9a8a752ca518ed0bc92a57c9e7f8e8919ae083462f7c17ea5badd02eaf64ec7",
+    "target": "f2c2b5416bb377f215a0b7a442a97f9c49f4a950839e4cc3f55dd36f2977b948",
+    "size": 19384
+  },
+  {
+    "path": "Managed/Assembly-CSharp.dll",
+    "patch": "Assembly-CSharp.dll.delta.gz",
+    "source": "e6bc31b5b91af9fdb63153fcf6b469b921f06ba54d77a33eda9ae1c109cc9d9b",
+    "target": "08489c29167625d19e7aa76f1b42500782ebf979fe9b840360d72a76d17c6b36",
+    "size": 432128
+  }
+]

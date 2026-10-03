@@ -1,0 +1,4 @@
+*.zip
+*.delta.gz
+__pycache__/
+*.pyc
