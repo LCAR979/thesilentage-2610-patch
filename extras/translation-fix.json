@@ -1,0 +1,10 @@
+{
+  "resource": "text_level01_cn",
+  "object": "ashtray",
+  "chapter": 1,
+  "before": "这是谁把一整罐骨灰倒里面了？我明明早上才清空的。",
+  "after": "这是谁把一整罐烟灰倒里面了？我明明早上才清空的。",
+  "offset": 2170988,
+  "source": "cec2da353e0df951be98b8a9f7486c06c6b3f3bece857d83ac609e3787cecc5e",
+  "target": "81f610c038affbc699574686bf12c965e6650db7c5a102b61ed5de599b44e1f7"
+}

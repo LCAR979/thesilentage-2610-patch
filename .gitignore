@@ -2,3 +2,8 @@
 *.delta.gz
 __pycache__/
 *.pyc
+dist/
+.cache/
+bin/
+obj/
+!extras/speedmod.delta.gz

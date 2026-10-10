@@ -3,7 +3,8 @@
     "path": "resources.assets",
     "patch": "resources.assets.delta.gz",
     "source": "8f03bf2860450230085d61df29be26eb3ce808a89607bff14ff5d8753bfc5bf0",
-    "target": "cec2da353e0df951be98b8a9f7486c06c6b3f3bece857d83ac609e3787cecc5e",
+    "intermediate": "cec2da353e0df951be98b8a9f7486c06c6b3f3bece857d83ac609e3787cecc5e",
+    "target": "81f610c038affbc699574686bf12c965e6650db7c5a102b61ed5de599b44e1f7",
     "size": 40970360
   },
   {

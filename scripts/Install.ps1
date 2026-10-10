@@ -41,6 +41,16 @@ foreach($item in $items) {
   $result=$output.ToArray()
  } finally {$reader.Dispose();$inputStream.Dispose();$output.Dispose()}
  $sha=[Security.Cryptography.SHA256]::Create()
+ if ($item.intermediate) {
+  try {$intermediateHash=([BitConverter]::ToString($sha.ComputeHash($result))).Replace('-','').ToLower()} finally {$sha.Dispose()}
+  if($intermediateHash -ne $item.intermediate){throw "Base output validation failed: $($item.path)"}
+  $fix=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'extras/translation-fix.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  $before=[Text.Encoding]::UTF8.GetBytes($fix.before);$after=[Text.Encoding]::UTF8.GetBytes($fix.after)
+  if($before.Length -ne $after.Length){throw 'Translation byte length mismatch'}
+  for($i=0;$i -lt $before.Length;$i++){if($result[$fix.offset+$i] -ne $before[$i]){throw 'Translation offset validation failed'}}
+  [Array]::Copy($after,0,$result,$fix.offset,$after.Length)
+  $sha=[Security.Cryptography.SHA256]::Create()
+ }
  try {$hash=([BitConverter]::ToString($sha.ComputeHash($result))).Replace('-','').ToLower()} finally {$sha.Dispose()}
  if ($hash -ne $item.target) {throw "Output validation failed: $($item.path)"}
  $prepared+=@{dest=$dest;source=$source;result=$result;sourceHash=$item.source}
