@@ -16,9 +16,9 @@ function Get-BytesHash([byte[]]$Bytes) {
  try { ([BitConverter]::ToString($sha.ComputeHash($Bytes))).Replace('-','').ToLowerInvariant() } finally {$sha.Dispose()}
 }
 function Get-DataPath([string]$Path) {
- if(!$Path){throw '请选择包含 thesilentage.exe 的游戏文件夹。'}
+ if(!$Path){throw '请点“浏览…”，选择 Steam 打开的游戏文件夹。'}
  $Path=$Path.Trim().Trim('"')
- if(!(Test-Path -LiteralPath (Join-Path $Path 'thesilentage.exe') -PathType Leaf)){throw '游戏目录不正确：需要选择包含 thesilentage.exe 的文件夹。'}
+ if(!(Test-Path -LiteralPath (Join-Path $Path 'thesilentage.exe') -PathType Leaf)){throw '没找到游戏。请在 Steam 中右键游戏 → 管理 → 浏览本地文件，再选择打开的文件夹。'}
  Join-Path $Path 'thesilentage_Data'
 }
 function Write-VerifiedFile([string]$Path,[byte[]]$Bytes,[string]$Expected) {
@@ -61,7 +61,7 @@ function Update-Translation([string]$Path) {
  $fix=Get-Content -LiteralPath (Join-Path $script:ExtrasRoot 'translation-fix.json') -Raw -Encoding UTF8 | ConvertFrom-Json
  $hash=Get-Hash $dest
  if($hash -eq $fix.target){return '译文已经是修正版。'}
- if($hash -ne $fix.source){throw '此译文更新需要中文 2610 v1.0.0。请下载完整 v1.1.0 发布包安装；未修改游戏。'}
+ if($hash -ne $fix.source){throw '请从补丁下载页重新下载补丁 ZIP，再点“安装 / 更新汉化”。本次没有修改游戏。'}
  $bytes=[IO.File]::ReadAllBytes($dest);$old=[Text.Encoding]::UTF8.GetBytes($fix.before);$new=[Text.Encoding]::UTF8.GetBytes($fix.after)
  if($old.Length -ne $new.Length){throw '译文长度不匹配。'}
  for($i=0;$i -lt $old.Length;$i++){if($bytes[$fix.offset+$i] -ne $old[$i]){throw '译文位置校验失败。'}}
@@ -74,35 +74,35 @@ function Update-Translation([string]$Path) {
 function Install-Speed([string]$Path) {
  Assert-GameClosed;$dest=Join-Path (Get-DataPath $Path) 'Managed\Assembly-CSharp.dll'
  $hash=Get-Hash $dest
- if($hash -eq $script:SpeedHash){return '加速 Mod 已安装。游戏中按 F6 切换正常/加速。'}
- if($hash -ne $script:NormalHash){throw '加速 Mod 需要中文 2610 v1.0.0 或 v1.1.0 的脚本文件。其他版本未被修改。'}
+ if($hash -eq $script:SpeedHash){return '加速已经装好了。游戏中按 F6 切换正常速度 / 加速。'}
+ if($hash -ne $script:NormalHash){throw '请先点“安装 / 更新汉化”，完成后再安装加速。本次没有修改游戏。'}
  $backup=$dest+'.speedmod-backup'
  if(Test-Path -LiteralPath $backup){if((Get-Hash $backup) -ne $script:NormalHash){throw '已有加速备份冲突。'}}else{[IO.File]::Copy($dest,$backup)}
  $result=Read-SpeedDelta ([IO.File]::ReadAllBytes($dest))
  Write-VerifiedFile $dest $result $script:SpeedHash
- return '已安装：行走约 2 倍，剧情/对白约 3 倍；F6 切换。语音音调会变高。'
+ return '加速装好了！走路约快 2 倍，剧情和对白约快 3 倍。按 F6 切换速度；加速时人声会变尖。'
 }
 function Restore-Speed([string]$Path) {
  Assert-GameClosed;$dest=Join-Path (Get-DataPath $Path) 'Managed\Assembly-CSharp.dll'
  $hash=Get-Hash $dest
- if($hash -eq $script:NormalHash){return '当前已经是正常速度的汉化脚本。'}
- if($hash -ne $script:SpeedHash){throw '当前文件不是本项目加速 Mod，为避免覆盖其他修改，恢复已停止。'}
+ if($hash -eq $script:NormalHash){return '已经是正常速度，无需卸载。'}
+ if($hash -ne $script:SpeedHash){throw '当前加速版本不受支持，暂时不能卸载。请到补丁下载页反馈。'}
  $backup=$dest+'.speedmod-backup'
- if(!(Test-Path -LiteralPath $backup) -or (Get-Hash $backup) -ne $script:NormalHash){throw '加速备份缺失或损坏，未修改游戏。'}
+ if(!(Test-Path -LiteralPath $backup) -or (Get-Hash $backup) -ne $script:NormalHash){throw '加速备份无法使用，本次没有修改游戏。请到补丁下载页反馈。'}
  Write-VerifiedFile $dest ([IO.File]::ReadAllBytes($backup)) $script:NormalHash
- return '已卸载加速 Mod，保留汉化和存档。'
+ return '加速已卸载，汉化和存档都保留着。'
 }
 function Get-SaveKey { [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($script:SavePath,$true) }
 function Get-PlayerPref($Key,[string]$Name) {
  $names=@($Key.GetValueNames() | Where-Object {$_ -match ('^'+[regex]::Escape($Name)+'_h\d+$')})
- if($names.Count -ne 1){throw "找不到唯一存档字段：$Name。"}
+ if($names.Count -ne 1){throw '存档信息不完整，暂时无法修复。请到补丁下载页反馈。'}
  $value=$Key.GetValue($names[0])
  if($value -is [byte[]]){return [Text.Encoding]::UTF8.GetString($value).TrimEnd([char]0)}
  return $value
 }
 function Assert-EndingScene($Key) {
  if((Get-PlayerPref $Key 'CurrentChapter') -ne 10 -or (Get-PlayerPref $Key 'CurrentLevel') -ne '115_sanatorium_office'){
-  throw '只支持第10章医生房间（115_sanatorium_office）卡住的存档。当前场景不匹配，未修改存档。'
+  throw '这个功能只用于第10章未来的医生房间。你当前不在这里，没有修改存档。'
  }
 }
 function Get-EndingEdits {
@@ -114,7 +114,7 @@ function Get-EndingEdits {
 }
 function Export-SaveBackup([string]$Path) {
  & reg.exe export ('HKCU\'+$script:SavePath) $Path /y | Out-Null
- if($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath $Path)){throw '完整存档备份失败，未修改存档。'}
+ if($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath $Path)){throw '没能备份存档，本次修复没有开始。请关闭游戏后重试。'}
 }
 function Get-BackupDirectory {
  $dir=Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'TheSilentAge2610\Backups'
@@ -138,7 +138,7 @@ function Fix-Ending {
  try {
   Assert-EndingScene $key
   $wall=$key.GetValue('wall_avoid_clicks_h4165810459',$null)
-  if($wall -ne 1){throw '未检测到本次排查确认的点击阻挡状态，未修改存档。'}
+  if($wall -ne 1){throw '这份存档不属于工具能处理的卡关情况，没有修改。请到补丁下载页反馈。'}
   $dir=Get-BackupDirectory;$stem='ending-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N')
   $reg=Join-Path $dir ($stem+'.reg');$json=Join-Path $dir ($stem+'.json')
   Export-SaveBackup $reg
@@ -153,30 +153,30 @@ function Fix-Ending {
    foreach($edit in (Get-EndingEdits)){$key.SetValue($edit.name,$edit.value,[Microsoft.Win32.RegistryValueKind]::$($edit.kind))}
    Assert-PatchedEnding $key
   } catch {Restore-SnapshotValues $key $snapshot;throw}
-  return "已解除点击阻挡。重新启动游戏，继续并手动点击医生。建议先按 F6 切回正常速度。完整备份：$reg"
+  return '修复完成，存档已自动备份。重新进入游戏，点“继续”；装了加速时，先按 F6 切回正常速度，然后点击医生。'
  } finally {$key.Dispose()}
 }
 function Assert-PatchedEnding($Key) {
  foreach($edit in (Get-EndingEdits)){
   $value=$Key.GetValue($edit.name,$null)
-  if($Key.GetValueNames() -notcontains $edit.name -or $Key.GetValueKind($edit.name).ToString() -ne $edit.kind){throw '存档字段类型不匹配。'}
-  if($edit.kind -eq 'Binary'){if(!($value -is [byte[]]) -or $value.Length -ne 1 -or $value[0] -ne 0){throw '对白状态已改变，未恢复旧状态。'}}
-  elseif($value -ne $edit.value){throw '存档状态已改变，未恢复旧状态。'}
+  if($Key.GetValueNames() -notcontains $edit.name -or $Key.GetValueKind($edit.name).ToString() -ne $edit.kind){throw '存档已经发生变化，暂时不能执行。请到补丁下载页反馈。'}
+  if($edit.kind -eq 'Binary'){if(!($value -is [byte[]]) -or $value.Length -ne 1 -or $value[0] -ne 0){throw '你已经继续游玩，不能撤销这次修复，以免影响进度。'}}
+  elseif($value -ne $edit.value){throw '你已经继续游玩，不能撤销这次修复，以免影响进度。'}
  }
 }
 function Restore-Ending {
  Assert-GameClosed;$dir=Get-BackupDirectory
  $file=Get-ChildItem -LiteralPath $dir -Filter 'ending-*.json' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
- if(!$file){throw '没有本工具生成的结局修复备份。'}
+ if(!$file){throw '没有可以撤销的结局修复。'}
  $snapshot=Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
- if($snapshot.version -ne 1 -or $snapshot.registry -ne $script:SavePath -or $snapshot.values.Count -ne 3){throw '备份格式错误。'}
+ if($snapshot.version -ne 1 -or $snapshot.registry -ne $script:SavePath -or $snapshot.values.Count -ne 3){throw '存档备份无法使用，没有撤销修复。请到补丁下载页反馈。'}
  $expected=@((Get-EndingEdits).name)
- if(@($snapshot.values.name | Sort-Object -Unique).Count -ne 3){throw '备份字段重复。'}
- foreach($v in $snapshot.values){if($expected -notcontains $v.name){throw '备份字段不属于本次修复。'};if($v.exists -and $v.kind -notin @('DWord','Binary')){throw '备份字段类型错误。'}}
+ if(@($snapshot.values.name | Sort-Object -Unique).Count -ne 3){throw '存档备份无法使用，没有撤销修复。请到补丁下载页反馈。'}
+ foreach($v in $snapshot.values){if($expected -notcontains $v.name){throw '存档备份无法使用，没有撤销修复。请到补丁下载页反馈。'};if($v.exists -and $v.kind -notin @('DWord','Binary')){throw '存档备份无法使用，没有撤销修复。请到补丁下载页反馈。'}}
  $key=Get-SaveKey
  if(!$key){throw '未找到存档。'}
  try {Assert-EndingScene $key;Assert-PatchedEnding $key;Restore-SnapshotValues $key $snapshot.values} finally {$key.Dispose()}
- return '已撤销最近一次结局修复，仅恢复三个字段；其他存档进度未被覆盖。'
+ return '已撤销结局修复。'
 }
 function Invoke-Extra([string]$Operation,[string]$Path) {
  switch($Operation){

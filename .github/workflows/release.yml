@@ -1,6 +1,8 @@
 name: Build release
 on:
   push:
+    branches: ['main']
+    paths: ['VERSION', '.github/workflows/release.yml']
     tags: ['v1.1.*']
   workflow_dispatch:
 permissions:
@@ -19,11 +21,24 @@ jobs:
         with:
           name: TheSilentAge-v1.1.0
           path: dist/*
-      - name: Publish tagged release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish versioned release
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create "${GITHUB_REF_NAME}" dist/*
-          --title "中文 2610 补丁 v1.1.0：译文修正、加速与结局恢复工具"
-          --notes-file docs/使用说明-v1.1.0.txt
+        run: |
+          version="v$(cat VERSION)"
+          if [[ "${GITHUB_REF}" == refs/tags/* && "${GITHUB_REF_NAME}" != "$version" ]]; then
+            echo 'Tag and VERSION do not match'; exit 1
+          fi
+          if gh release view "$version" >/dev/null 2>&1; then
+            published_target="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$version" --jq '.target_commitish')"
+            # One approved replacement of the original v1.1.0 release.
+            if [[ "$version" == 'v1.1.0' && "$published_target" == 'f73ff369f6bbb3270e0599354cb4ab459a5280b8' ]]; then
+              gh release delete "$version" --cleanup-tag --yes
+            else
+              echo 'Release already exists; no assets were overwritten'; exit 0
+            fi
+          fi
+          gh release create "$version" dist/* --target "${GITHUB_SHA}" \
+            --title "The Silent Age 中文补丁 v1.1.0" \
+            --notes-file docs/使用说明-v1.1.0.txt
